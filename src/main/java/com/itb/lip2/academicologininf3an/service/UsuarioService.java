@@ -15,7 +15,7 @@ public interface UsuarioService {
 	Usuario delete(Long id) throws Exception;
 	Papel savePapel(Papel papel);
 	void addPapelToUsuario(Usuario usuario, String nomePapel);
-
+	Usuario authenticate(String nome, String senha);
 	Usuario findByUsername(String username);
 
 }
