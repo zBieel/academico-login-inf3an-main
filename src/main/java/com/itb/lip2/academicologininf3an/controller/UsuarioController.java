@@ -64,7 +64,8 @@ public class UsuarioController {
             Usuario user = usuarioService.authenticate(loginRequest.getNome(), loginRequest.getSenha());
             return ResponseEntity.ok().body(user);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciais inválidas!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
+    
 }

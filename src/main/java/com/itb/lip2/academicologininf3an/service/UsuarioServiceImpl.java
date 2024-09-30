@@ -103,4 +103,16 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
 
 		return new org.springframework.security.core.userdetails.User(usuario.getEmail(), usuario.getSenha(), authorities);
 	}
+
+		// New method for authentication
+	public Usuario authenticate(String username, String password) throws Exception {
+		Usuario usuario = findByUsername(username);
+		if (usuario == null) {
+			throw new Exception("Usuário não encontrado!");
+		}
+		if (!passwordEncoder.matches(password, usuario.getSenha())) {
+			throw new Exception("Senha incorreta!");
+		}
+		return usuario;
+	}
 }
