@@ -2,10 +2,12 @@ package com.itb.lip2.academicologininf3an.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -19,6 +21,9 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     @GetMapping("/users")
     public ResponseEntity<List<Usuario>> getUsers() {
         return ResponseEntity.ok().body(usuarioService.findAll());
@@ -26,8 +31,15 @@ public class UsuarioController {
 
     @PostMapping("/users")
     public ResponseEntity<Usuario> saveUser(@RequestBody Usuario usuario) {
-        URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/academico/api/v1/users").toUriString());
-        return ResponseEntity.created(uri).body(usuarioService.save(usuario));
+        if (usuarioService.findByUsername(usuario.getEmail()) != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        usuario.setCodStatusUsuario(true);
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+        Usuario savedUser = usuarioService.save(usuario);
+        URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/academico/api/v1/users/" + savedUser.getId()).toUriString());
+        return ResponseEntity.created(uri).body(savedUser);
     }
 
     @GetMapping("/users/{id}")
@@ -57,15 +69,16 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
         }
     }
-    
+
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody Usuario loginRequest) {
+    public ResponseEntity<Object> login(@RequestBody Map<String, String> loginRequest) {
         try {
-            Usuario user = usuarioService.authenticate(loginRequest.getNome(), loginRequest.getSenha());
+            String email = loginRequest.get("email");
+            String senha = loginRequest.get("senha");
+            Usuario user = usuarioService.authenticate(email, senha);
             return ResponseEntity.ok().body(user);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
-    
 }
